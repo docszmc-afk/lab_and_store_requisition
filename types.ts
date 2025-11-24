@@ -1,147 +1,147 @@
-export enum Role {
+import React from 'react';
+
+export enum Status {
+  DRAFT = 'Draft',
+  PENDING_CHAIRMAN_REVIEW = 'Pending Chairman Review',
+  PENDING_STORE_FULFILLMENT = 'Pending Store Fulfillment',
+  PENDING_AUDIT_REVIEW = 'Pending Audit Review', // Audit 1
+  PENDING_AUDIT_2_REVIEW = 'Pending Audit 2 Review', // Audit 2
+  PENDING_FINAL_APPROVAL = 'Pending Final Approval', // Chairman (for some flows)
+  PENDING_FINANCE_APPROVAL = 'Pending Finance Approval', // HOF
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  RETURNED = 'Returned',
+  ORDERED = 'Ordered',
+  DELIVERED = 'Delivered',
+  SPLIT = 'Split (processed)'
+}
+
+export type PaymentStatus = 'Unpaid' | 'Partially Paid' | 'Fully Paid';
+
+export enum Priority {
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
+  CRITICAL = 'Critical'
+}
+
+export enum Department {
+  EMERGENCY = 'Emergency',
+  PEDIATRICS = 'Pediatrics',
+  SURGERY = 'Surgery',
+  PHARMACY = 'Pharmacy',
+  ADMINISTRATION = 'Administration',
+  LABORATORY = 'Laboratory'
+}
+
+export enum UserRole {
   LAB_ADMIN = 'Lab Admin',
   PHARMACY_ADMIN = 'Pharmacy Admin',
-  APPROVER = 'Approver',
-  ACCOUNTS = 'Accounts',
+  HEAD_OF_FINANCE = 'Head of Finance',
+  ACCOUNTANT = 'Accountant',
+  CHAIRMAN = 'Chairman',
+  AUDITOR = 'Auditor'
 }
+
+export type RequisitionType = 
+  | 'Lab Purchase Order' 
+  | 'Equipment Request' 
+  | 'Outsourced Histology Payment'
+  | 'Pharmacy Purchase Order'
+  | 'Emergency Request (1 month)'
+  | 'Emergency Request (1 week)'
+  | 'General Request';
 
 export interface User {
-  id: string; // This will be a UUID from Supabase Auth
+  id: string;
   email: string;
   name: string;
-  role: Role;
-  department: 'Lab' | 'Pharmacy' | 'Management' | 'Finance';
+  role: UserRole;
+  department?: Department;
 }
-
-export enum RequisitionType {
-  STANDARD = 'STANDARD',
-  PURCHASE_ORDER = 'PURCHASE_ORDER',
-  HISTOLOGY_PAYMENT = 'HISTOLOGY_PAYMENT',
-}
-
-
-export enum RequisitionStatus {
-  // --- Standard Flow ---
-  PENDING_APPROVAL = 'Pending Approval', // To Chairman/Auditor
-  APPROVED = 'Approved', // Ready for Accounts
-
-  // --- Purchase Order Flow ---
-  DRAFT = 'Draft', // Lab is creating it
-  PENDING_CHAIRMAN_REVIEW = 'Pending Chairman Review', // After Lab submits
-  PENDING_STORE_PRICING = 'Pending Store Pricing', // After Chairman approves
-  PENDING_AUDITOR_REVIEW = 'Pending Auditor Review', // After Store prices
-  PENDING_FINAL_APPROVAL = 'Pending Final Approval', // After Auditor approves
-  PO_COMPLETED = 'Purchase Order Completed',
-
-  // --- Histology Flow ---
-  PENDING_AUDITOR_APPROVAL = 'Pending Auditor Approval',
-  PENDING_CHAIRMAN_APPROVAL = 'Pending Chairman Approval',
-  HISTOLOGY_APPROVED = 'Histology Approved',
-
-  // --- Payment Flow ---
-  PAYMENT_PROCESSING = 'Payment Processing',
-  PAID = 'Paid',
-
-  // --- Common Statuses ---
-  PROCESSED = 'Processed', // Kept for legacy standard reqs, can be phased out for PAID
-  QUERIED = 'Queried',
-  REJECTED = 'Rejected',
-}
-
 
 export interface RequisitionItem {
   id: string;
-  requisition_id: string;
   name: string;
   quantity: number;
-  description: string;
-  supplier?: string;
-  estimated_unit_cost?: number; // For Standard Requisitions
-  stock_level?: number;        // For Purchase Orders
-  unit_price?: number;         // For Purchase Orders, from Store
+  unit: string;
+  estimatedCost: number; // Used for initial estimates
+  stockLevel?: number; // Added for Lab PO
+  supplier?: string; // Added for Store fulfillment
+  unitCost?: number; // Added for Store fulfillment (actual cost)
+  category: string;
+  // Added for Histology
+  patientName?: string;
+  labNumber?: string;
+  retainership?: number;
+  zmcCharge?: number;
 }
 
-export interface HistologyItem {
+export interface AuditLog {
   id: string;
-  requisition_id: string;
   date: string;
-  patient_name: string;
-  hospital_no: string;
-  lab_no: string;
-  receipt_no: string; // Corresponds to RECEIPT NO/HMO/COY
-  outsource_service: string;
-  outsource_bills: number;
-  zmc_charge: number;
-  retainership: string;
-}
-
-export interface Message {
-  id: string;
-  requisition_id: string;
-  sender_id: string;
-  senderName?: string; // Joined from profiles
-  text: string;
-  timestamp: string;
-}
-
-export interface Signature {
-  name: string;
-  signature: string; // base64 data URL
-  timestamp: string;
-}
-
-export interface ApprovalLog {
-  id: string;
-  requisition_id: string;
-  timestamp: string;
-  user_id: string;
-  userName?: string; // Joined from profiles
-  action: 'Submitted' | 'Approved' | 'Queried' | 'Processed' | 'Rejected' | 'Priced' | 'Reviewed' | 'Payment Added' | 'Marked as Paid' | 'Resubmitted';
+  userName: string;
+  userRole: UserRole;
+  action: 'Created' | 'Approved' | 'Rejected' | 'Returned' | 'Updated' | 'Final Approval' | 'Consulted Audit' | 'Advice Submitted' | 'Split' | 'Payment Recorded';
   comment?: string;
-  signature?: string; // base64 data URL
+  signature?: string; // Base64 image string
 }
 
-export interface Payment {
+export interface Attachment {
+  name: string;
+  type: string;
+  data: string; // Base64 string
+}
+
+export interface PaymentRecord {
   id: string;
-  requisition_id: string;
-  amount: number;
   date: string;
-  proof_path?: string; // Path in Supabase Storage
-  recorded_by_id: string;
-  recordedByName?: string; // Joined from profiles
-  timestamp: string;
+  amount: number;
+  reference: string;
+  recordedBy: string;
+  attachment?: Attachment;
 }
 
 export interface Requisition {
   id: string;
   type: RequisitionType;
-  department: 'Lab' | 'Pharmacy';
-  requester_id: string;
-  requesterName?: string; // Joined from profiles
-  status: RequisitionStatus;
-  total_estimated_cost: number;
-  created_at: string;
-  updated_at: string;
-  queried_to?: 'Lab' | 'Pharmacy';
-  previous_status_on_query?: RequisitionStatus;
-  signatures?: {
-    preparedBy?: Signature;
-    levelConfirmedBy?: Signature;
-    checkedBy?: Signature;
-  };
-  // Relational data, loaded separately
-  items?: RequisitionItem[];
-  histologyItems?: HistologyItem[];
-  log?: ApprovalLog[];
-  conversation?: Message[];
-  payments?: Payment[];
+  requesterName: string;
+  requesterEmail: string; // Added for Notifications
+  department: Department;
+  date: string;
+  status: Status;
+  priority: Priority;
+  items: RequisitionItem[];
+  totalEstimatedCost: number;
+  
+  title?: string; // Added for Emergency Request (1 week) Header
+  justification?: string; // Added for Equipment Request & Emergency Request Purpose
+  beneficiary?: string; // Added for Emergency Request (1 month)
+  amountInWords?: string; // Added for Emergency Request
+  
+  aiAnalysis?: string;
+  auditTrail: AuditLog[];
+  attachments: Attachment[]; // Updated from string[]
+  
+  // Financials
+  amountPaid: number;
+  paymentStatus: PaymentStatus;
+  paymentRecords: PaymentRecord[];
 }
 
 export interface Notification {
-  id: number;
-  recipient_id: string;
+  id: string;
+  recipientEmail: string;
+  title: string;
   message: string;
-  requisition_id: string;
+  date: string;
   read: boolean;
-  created_at: string;
+  relatedRequisitionId?: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface NavItem {
+  label: string;
+  icon: React.ReactNode;
+  id: string;
 }

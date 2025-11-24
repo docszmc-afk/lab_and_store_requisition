@@ -1,5 +1,5 @@
 {
-  "name": "Zankli Medical Centre Procurement System",
-  "description": "A modern, responsive procurement and requisition system for the lab and pharmacy departments of Zankli Medical Centre. It facilitates the creation, approval, and processing of requisitions.",
+  "name": "Zankli Medical Procurement",
+  "description": "Ultra-modern procurement and requisition management system for Zankli Medical Centre.",
   "requestFramePermissions": []
 }
